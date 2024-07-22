@@ -1,0 +1,67 @@
+#!/bin/bash
+
+#source radio special case, only download audio
+name="source-radio"
+dir="/home/mac/youtube-backup/vids/$name" 
+url="https://www.youtube.com/playlist?list=PL-7euE4V54KUnG7c1hZYXgjFaswHBVtyo"
+
+echo "Playlist: $name"
+file="/home/mac/youtube-backup/LEDGER/${name}_contents.txt"
+oldfile="${file::-4}.old"
+touch "$file"
+cp "$file" "$oldfile"
+yt-dlp_linux --flat-playlist -j "$url" > "$file"
+/home/mac/youtube-backup/format_vids.py "$file" 
+
+newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
+newvidsfile=$(mktemp)
+echo $newvids > $newvidsfile
+echo $newvids
+echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
+
+for vid in $newvids; do
+  yt-dlp_linux -P /home/mac/youtube-backup/vids/source-radio $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k
+done
+
+
+
+#prepare list of playlists in EZ format
+yt-dlp_linux --flat-playlist -j https://www.youtube.com/@thisjitislegitimatelytripping/playlists > /home/mac/youtube-backup/LEDGER/playlists.txt
+/home/mac/youtube-backup/format_playlists.py
+
+#for each playlist, see if I need to download anything new and do so if so
+cat /home/mac/youtube-backup/LEDGER/playlists.txt | while read line;
+do
+  name=${line#* }
+  dir="/home/mac/youtube-backup/vids/$name" 
+  url=${line%% *}
+
+  echo "Playlist: $name"
+  #create file and directory if it doesn't exist
+  if ! [ -d "$dir" ]; then
+    mkdir $dir
+    chown mac:mac $dir
+  fi;
+  file="/home/mac/youtube-backup/LEDGER/${name}_contents.txt"
+  touch "$file"
+  cp "$file" "${file::-4}.old"
+  yt-dlp_linux --flat-playlist -j "$url" > "$file"
+
+  /home/mac/youtube-backup/format_vids.py "$file"
+
+  newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
+
+  #deleting videos that get hidden???? cmon guy
+  #removedvids=$(grep -F -x -v -f "$file" "${file::-4}.old")
+  
+
+  newvidsfile=$(mktemp)
+  echo $newvids > $newvidsfile
+  echo $newvids
+  echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
+  
+  for vid in $newvids; do
+    yt-dlp_linux $vid --add-metadata -P $dir -o "%(title)s.%(ext)s";
+  done
+
+done 
