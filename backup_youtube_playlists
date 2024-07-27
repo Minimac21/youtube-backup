@@ -1,39 +1,44 @@
 #!/bin/bash
 
+SRC_DIR="/home/mac/projects/youtube-backup/"
+LEDGER_DIR=$SRC_DIR"LEDGER/"
+VIDS_DIR="/home/mac/media/videos/"
+
 #source radio special case, only download audio
-name="source-radio"
-dir="/home/mac/youtube-backup/vids/$name" 
-url="https://www.youtube.com/playlist?list=PL-7euE4V54KUnG7c1hZYXgjFaswHBVtyo"
+names=( "source-radio" "musica")
+dirs=( "/home/mac/media/music/source-radio/" "/home/mac/media/music/youtube/" )
+urls=( "https://www.youtube.com/playlist?list=PL-7euE4V54KUnG7c1hZYXgjFaswHBVtyo" "https://www.youtube.com/playlist?list=PLNuMHByojWY56BjXnnejzRI4No1r1rvG0" )
 
-echo "Playlist: $name"
-file="/home/mac/youtube-backup/LEDGER/${name}_contents.txt"
-oldfile="${file::-4}.old"
-touch "$file"
-cp "$file" "$oldfile"
-yt-dlp_linux --flat-playlist -j "$url" > "$file"
-/home/mac/youtube-backup/format_vids.py "$file" 
+for idx in ${!names[@]};
+do
+  echo "Music Playlist: ${names[idx]}"
+  file=${LEDGER_DIR}"${names[idx]}_contents.txt"
+  oldfile="${file::-4}.old"
+  touch "$file"
+  cp "$file" "$oldfile"
+  yt-dlp_linux --flat-playlist -j "${urls[idx}" > "$file"
+  $SRC_DIR"format_vids.py" "$file" 
 
-newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
-newvidsfile=$(mktemp)
-echo $newvids > $newvidsfile
-echo $newvids
-echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
+  newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
+  newvidsfile=$(mktemp)
+  echo "$newvids" > $newvidsfile
+  echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
 
-for vid in $newvids; do
-  yt-dlp_linux -P /home/mac/youtube-backup/vids/source-radio $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k
+  for vid in $newvids; do
+    yt-dlp_linux -P ${dirs[idx]} $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k
+  done
 done
 
 
-
 #prepare list of playlists in EZ format
-yt-dlp_linux --flat-playlist -j https://www.youtube.com/@thisjitislegitimatelytripping/playlists > /home/mac/youtube-backup/LEDGER/playlists.txt
-/home/mac/youtube-backup/format_playlists.py
+yt-dlp_linux --flat-playlist -j https://www.youtube.com/@thisjitislegitimatelytripping/playlists > $LEDGER_DIR"playlists.txt"
+$SRC_DIR"format_playlists.py"
 
 #for each playlist, see if I need to download anything new and do so if so
-cat /home/mac/youtube-backup/LEDGER/playlists.txt | while read line;
+cat $LEDGER_DIR"playlists.txt" | while read line;
 do
   name=${line#* }
-  dir="/home/mac/youtube-backup/vids/$name" 
+  dir=${VIDS_DIR}${name}
   url=${line%% *}
 
   echo "Playlist: $name"
@@ -42,18 +47,17 @@ do
     mkdir $dir
     chown mac:mac $dir
   fi;
-  file="/home/mac/youtube-backup/LEDGER/${name}_contents.txt"
+  file=${LEDGER_DIR}"${name}_contents.txt"
   touch "$file"
   cp "$file" "${file::-4}.old"
   yt-dlp_linux --flat-playlist -j "$url" > "$file"
 
-  /home/mac/youtube-backup/format_vids.py "$file"
+  ${SRC_DIR}"format_vids.py" "$file"
 
   newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
 
   #deleting videos that get hidden???? cmon guy
   #removedvids=$(grep -F -x -v -f "$file" "${file::-4}.old")
-  
 
   newvidsfile=$(mktemp)
   echo $newvids > $newvidsfile
