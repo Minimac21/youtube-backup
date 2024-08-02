@@ -1,13 +1,15 @@
 #!/bin/bash
 
+getopt
+
 SRC_DIR="/home/mac/projects/youtube-backup/"
 LEDGER_DIR=$SRC_DIR"LEDGER/"
 VIDS_DIR="/home/mac/media/videos/"
 
 #source radio special case, only download audio
-names=( "source-radio" "musica")
-dirs=( "/home/mac/media/music/source-radio/" "/home/mac/media/music/youtube/" )
-urls=( "https://www.youtube.com/playlist?list=PL-7euE4V54KUnG7c1hZYXgjFaswHBVtyo" "https://www.youtube.com/playlist?list=PLNuMHByojWY56BjXnnejzRI4No1r1rvG0" )
+names=( "source-radio" "musica" "bap-clips")
+dirs=( "/home/mac/media/music/source-radio/" "/home/mac/media/music/youtube/" "/home/mac/media/videos/bap-clips")
+urls=( "https://www.youtube.com/playlist?list=PL-7euE4V54KUnG7c1hZYXgjFaswHBVtyo" "https://www.youtube.com/playlist?list=PLNuMHByojWY56BjXnnejzRI4No1r1rvG0" "https://www.youtube.com/playlist?list=PLw9eAUKe0VPg65LY8XQUalos11jJTNr62" )
 
 for idx in ${!names[@]};
 do
@@ -16,7 +18,7 @@ do
   oldfile="${file::-4}.old"
   touch "$file"
   cp "$file" "$oldfile"
-  yt-dlp_linux --flat-playlist -j "${urls[idx}" > "$file"
+  yt-dlp_linux --flat-playlist -j "${urls[idx]}" > "$file"
   $SRC_DIR"format_vids.py" "$file" 
 
   newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
@@ -25,7 +27,7 @@ do
   echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
 
   for vid in $newvids; do
-    yt-dlp_linux -P ${dirs[idx]} $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k
+    yt-dlp_linux -P ${dirs[idx]} $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k -o "%(title)s.%(ext)s"
   done
 done
 
@@ -60,8 +62,7 @@ do
   #removedvids=$(grep -F -x -v -f "$file" "${file::-4}.old")
 
   newvidsfile=$(mktemp)
-  echo $newvids > $newvidsfile
-  echo $newvids
+  echo "$newvids" > $newvidsfile
   echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
   
   for vid in $newvids; do
