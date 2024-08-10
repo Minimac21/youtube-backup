@@ -1,6 +1,6 @@
 #!/bin/bash
 
-$date
+echo $(date)
 
 SRC_DIR="/home/mac/projects/youtube-backup/"
 LEDGER_DIR=$SRC_DIR"LEDGER/"
@@ -20,7 +20,7 @@ do
   oldfile="${file::-4}.old"
   touch "$file"
   cp "$file" "$oldfile"
-  yt-dlp_linux --flat-playlist -j "${urls[idx]}" > "$file"
+  /home/mac/bin/yt-dlp_linux --flat-playlist -j "${urls[idx]}" > "$file"
   $SRC_DIR"format_vids.py" "$file" 
 
   newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
@@ -31,16 +31,16 @@ do
   for vid in $newvids; do
     overwrite_artist_yesno=${overwrite_artist_yesnos[idx]}
     if [ ${overwrite_artist_yesno} == "yes" ]; then
-      yt-dlp_linux -P ${dirs[idx]} $vid --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k -o "%(title)s.%(ext)s" --replace-in-metadata "uploader" "[^.]+" "${overwrite_artist_names}" --parse-metadata "uploader:%(artist)s" --parse-metadata "title:%(album)s" --embed-metadata
+      /home/mac/bin/yt-dlp_linux -P ${dirs[idx]} $vid --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k -o "%(title)s.%(ext)s" --replace-in-metadata "uploader" "[^.]+" "${overwrite_artist_names}" --parse-metadata "uploader:%(artist)s" --parse-metadata "title:%(album)s" --embed-metadata
     else
-      yt-dlp_linux -P ${dirs[idx]} $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k -o "%(title)s.%(ext)s"
+      /home/mac/bin/yt-dlp_linux -P ${dirs[idx]} $vid --add-metadata --embed-thumbnail -f bestaudio -x --audio-format mp3 --audio-quality 320k -o "%(title)s.%(ext)s"
     fi
   done
 done
 
 
 #prepare list of playlists in EZ format
-yt-dlp_linux --flat-playlist -j https://www.youtube.com/@thisjitislegitimatelytripping/playlists > $LEDGER_DIR"playlists.txt"
+/home/mac/bin/yt-dlp_linux --flat-playlist -j https://www.youtube.com/@thisjitislegitimatelytripping/playlists > $LEDGER_DIR"playlists.txt"
 $SRC_DIR"format_playlists.py"
 
 #for each playlist, see if I need to download anything new and do so if so
@@ -59,7 +59,7 @@ do
   file=${LEDGER_DIR}"${name}_contents.txt"
   touch "$file"
   cp "$file" "${file::-4}.old"
-  yt-dlp_linux --flat-playlist -j "$url" > "$file"
+  /home/mac/bin/yt-dlp_linux --flat-playlist -j "$url" > "$file"
 
   ${SRC_DIR}"format_vids.py" "$file"
 
@@ -73,7 +73,7 @@ do
   echo "new vids: $(( $(wc -l $newvidsfile | awk '{print $1}') - 1 ))"
   
   for vid in $newvids; do
-    yt-dlp_linux $vid --add-metadata -P $dir -o "%(title)s.%(ext)s";
+    /home/mac/bin/yt-dlp_linux $vid --add-metadata -P $dir -o "%(title)s.%(ext)s";
   done
 
 done 
