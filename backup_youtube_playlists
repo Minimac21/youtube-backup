@@ -30,6 +30,7 @@ echo "new vids: $(wc -l $newvidsfile | awk '{print $1}')"
 for vid in $newvids; do
     /home/mac/bin/yt-dlp_linux --no-warnings -q -P ${location} $vid \
       -f bestaudio -x \
+      --embed-thumbnail \ 
       --audio-format mp3 \
       --audio-quality 320k \
       --replace-in-metadata "title" " . Source Radio 📡 " "" \
