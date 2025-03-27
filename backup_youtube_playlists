@@ -23,14 +23,15 @@ $SRC_DIR"format_vids.py" "$file"
 
 newvids=$(grep -F -x -v -f "${file::-4}.old" "$file")
 newvidsfile=$(mktemp)
-if [ "$newvids" ]; then echo "$newvids" > $newvidsfile
+if [ "$newvids" ]; then 
+  echo "$newvids" > $newvidsfile
 fi
 echo "new vids: $(wc -l $newvidsfile | awk '{print $1}')"
 
 for vid in $newvids; do
-    /home/mac/bin/yt-dlp_linux --no-warnings -q -P ${location} $vid \
+    /home/mac/bin/yt-dlp_linux -P ${location} $vid \
       -f bestaudio -x \
-      --embed-thumbnail \ 
+      --embed-thumbnail \
       --audio-format mp3 \
       --audio-quality 320k \
       --replace-in-metadata "title" " . Source Radio 📡 " "" \
@@ -44,11 +45,11 @@ done
 
 
 #MUSICS, option to overwrite artist name
-names=( "musica" "bap-clips")
-dirs=( "/home/mac/media/music/youtube/" "/home/mac/media/audio/bap-clips")
-urls=( "https://www.youtube.com/playlist?list=PLNuMHByojWY56BjXnnejzRI4No1r1rvG0" "https://www.youtube.com/playlist?list=PLw9eAUKe0VPg65LY8XQUalos11jJTNr62" )
-overwrite_artist_yesnos=( "yes" "no" )
-overwrite_artist_names=( "youtube" "no" )
+names=( "musica" "bap-clips" "books" )
+dirs=( "/home/mac/media/music/youtube/" "/home/mac/media/audio/bap-clips" "/home/mac/media/audio" )
+urls=( "https://www.youtube.com/playlist?list=PLNuMHByojWY56BjXnnejzRI4No1r1rvG0" "https://www.youtube.com/playlist?list=PLw9eAUKe0VPg65LY8XQUalos11jJTNr62" "https://www.youtube.com/playlist?list=PLNuMHByojWY7NjJ5Ow1z7TAAvsLAKwMYa")
+overwrite_artist_yesnos=( "yes" "no" "no" )
+overwrite_artist_names=( "youtube" "no" "no" )
 
 for idx in ${!names[@]};
 do
